@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/mainbg"
+        tools:context=".PlayActivity">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardViewPlayActivityQuestion"
+            android:layout_width="300dp"
+            android:layout_height="250dp"
+            android:layout_marginTop="30dp"
+            app:cardBackgroundColor="@color/playQuestionTextColor"
+            app:cardCornerRadius="25dp"
+            app:cardElevation="15dp"
+            app:contentPadding="35dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/textViewPlayActivityQuestion"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="fdsgdx"
+                android:textAlignment="center"
+                android:textSize="17sp"
+                android:textStyle="bold"/>
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/textViewPlayActivityQuest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="80dp"
+            android:text="_ _ _ _ _ _"
+            android:textColor="@color/playQuestionTextColor"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cardViewPlayActivityQuestion" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="64dp"
+            android:layout_marginTop="50dp"
+            android:layout_marginEnd="64dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewPlayActivityQuest">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextPlayActivityGuess"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Tahmin Değerini Giriniz"
+                android:textAlignment="center"
+                android:textSize="17sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textInputLayout">
+
+            <Button
+                android:id="@+id/buttonPlayActivityHarfAl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_letter_bg"
+                android:onClick="butonHarfAl"
+                app:backgroundTint="@null" />
+
+            <Button
+                android:id="@+id/buttonPlayActivityTahminEt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="25dp"
+                android:background="@drawable/btn_guess_bg"
+                android:onClick="butonTahminEt"
+                app:backgroundTint="@null" />
+        </LinearLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

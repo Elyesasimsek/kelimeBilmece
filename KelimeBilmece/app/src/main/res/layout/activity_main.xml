@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="mainActivity"
+            type="com.elyesasimsek.kelimebilmece.MainActivity" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/mainbg"
+        tools:context=".MainActivity">
+
+        <ImageView
+            android:id="@+id/imageViewMainActivityUserNameBg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-9dp"
+            app:layout_constraintBottom_toBottomOf="@+id/circleImageViewMainActivityProfile"
+            app:layout_constraintStart_toEndOf="@+id/circleImageViewMainActivityProfile"
+            app:layout_constraintTop_toTopOf="@+id/circleImageViewMainActivityProfile"
+            app:srcCompat="@drawable/userprofile" />
+
+        <TextView
+            android:id="@+id/textViewMainActivityUserName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLength="15"
+            android:text="@string/mainUserNameTextString"
+            android:textColor="@color/mainUserNameTextColor"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/imageViewMainActivityUserNameBg"
+            app:layout_constraintEnd_toEndOf="@+id/imageViewMainActivityUserNameBg"
+            app:layout_constraintStart_toStartOf="@+id/imageViewMainActivityUserNameBg"
+            app:layout_constraintTop_toTopOf="@+id/imageViewMainActivityUserNameBg" />
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/circleImageViewMainActivityProfile"
+            android:layout_width="66dp"
+            android:layout_height="66dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:src="@drawable/ic_person"
+            app:civ_border_color="@color/mainCircleImageBorderColor"
+            app:civ_border_width="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/imageViewMainActivityHeartDesign"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="16dp"
+            android:src="@drawable/heartdesign"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="@+id/imageViewMainActivityHeartDesign"
+            app:layout_constraintEnd_toEndOf="@+id/imageViewMainActivityHeartDesign"
+            app:layout_constraintStart_toStartOf="@+id/imageViewMainActivityHeartDesign"
+            app:layout_constraintTop_toTopOf="@+id/imageViewMainActivityHeartDesign">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textViewMainActivityUserHeartCount"
+                android:text="+1"
+                android:gravity="center"
+                android:textColor="@color/mainUserNameTextColor"
+                android:textSize="14dp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/heart" />
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/imageViewMainActivitySettings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:srcCompat="@drawable/settings" />
+
+        <ImageView
+            android:id="@+id/imageViewMainActivityAppNameLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/circleImageViewMainActivityProfile"
+            app:srcCompat="@drawable/appnamelogo" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imageViewMainActivityAppNameLogo">
+
+            <Button
+                android:id="@+id/buttonMainActivityPlay"
+                android:layout_width="180dp"
+                android:layout_height="50dp"
+                android:background="@drawable/btn_play_bg"
+                android:onClick="mainBtnHemenOynaClick"
+                app:backgroundTint="@null" />
+
+            <Button
+                android:id="@+id/buttonMainActivityShop"
+                android:layout_width="180dp"
+                android:layout_height="50dp"
+                android:layout_marginTop="15dp"
+                android:background="@drawable/btn_shop_bg"
+                android:onClick="mainBtnMarketClick"
+                app:backgroundTint="@null" />
+
+            <Button
+                android:id="@+id/buttonMainActivityExit"
+                android:layout_width="180dp"
+                android:layout_height="50dp"
+                android:layout_marginTop="15dp"
+                android:background="@drawable/btn_exit_bg"
+                android:onClick="mainBtnCikisClick"
+                app:backgroundTint="@null" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>
