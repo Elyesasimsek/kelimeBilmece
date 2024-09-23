@@ -10,7 +10,7 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/main"
+        android:id="@+id/mainActivityConstraint"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/mainbg"
@@ -61,7 +61,24 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <Button
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:id="@+id/buttonMainActivityRewarded"
+            android:layout_marginEnd="15dp"
+            android:text="@string/arti"
+            android:background="@drawable/btn_round_bg"
+            android:textColor="@color/mainButtonTextColor"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:onClick="btnHakKazan"
+            app:layout_constraintBottom_toBottomOf="@+id/imageViewMainActivityHeartDesign"
+            app:layout_constraintEnd_toStartOf="@+id/linearLayoutMainActivity"
+            app:layout_constraintTop_toTopOf="@+id/imageViewMainActivityHeartDesign"
+            app:backgroundTint="@null" />
+
         <LinearLayout
+            android:id="@+id/linearLayoutMainActivity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -71,11 +88,11 @@
             app:layout_constraintTop_toTopOf="@+id/imageViewMainActivityHeartDesign">
 
             <TextView
+                android:id="@+id/textViewMainActivityUserHeartCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/textViewMainActivityUserHeartCount"
-                android:text="+1"
                 android:gravity="center"
+                android:text="+1"
                 android:textColor="@color/mainUserNameTextColor"
                 android:textSize="14dp"
                 android:textStyle="bold" />
@@ -87,15 +104,34 @@
 
         </LinearLayout>
 
-        <ImageView
-            android:id="@+id/imageViewMainActivitySettings"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
+            android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/settings" />
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/imageViewMainActivitySettings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                app:srcCompat="@drawable/settings"
+                android:onClick="btnAyarlar"/>
+
+            <com.google.android.gms.ads.AdView
+                android:id="@+id/adViewMainActivityBanner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="visible" />
+
+
+        </LinearLayout>
+
 
         <ImageView
             android:id="@+id/imageViewMainActivityAppNameLogo"

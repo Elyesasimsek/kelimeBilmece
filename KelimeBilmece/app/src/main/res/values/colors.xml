@@ -7,4 +7,9 @@
     <color name="mainUserNameTextColor">#FFEB3E</color>
     <color name="playQuestionTextColor">#EF4300</color>
     <color name="splashScreenTextColor">#E6951D</color>
+    <color name="mainButtonTextColor">#EF4300</color>
+    <color name="customBtnTextColor">#F3E24F</color>
+    <color name="customTextColor">#FFEB3C</color>
+    <color name="customBgColor">#FB934B</color>
+    <color name="customBgCloseColor">#D83E01</color>
 </resources>

@@ -4,10 +4,13 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.WindowMetrics;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -18,6 +21,10 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.databinding.DataBindingUtil;
 
 import com.elyesasimsek.kelimebilmece.databinding.ActivityPlayBinding;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -43,6 +50,9 @@ public class PlayActivity extends AppCompatActivity {
 
     private Intent getIntent;
     private int hakSayisi, sonHakSayisi;
+    private AdView adView;
+    private static String AD_UNIT_ID_BANNER = "ca-app-pub-4632976048436433/1647001111";
+    private static String TEST_AD_UNIT_ID_BANNER = "ca-app-pub-3940256099942544/9214589741";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +64,14 @@ public class PlayActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        new Thread(
+                () -> {
+                    // Initialize the Google Mobile Ads SDK on a background thread.
+                    MobileAds.initialize(this, initializationStatus -> {});
+                })
+                .start();
+
         sorularListesi = new ArrayList<>();
         sorularKodList = new ArrayList<>();
         kelimelerLisetesi = new ArrayList<>();
@@ -63,13 +81,43 @@ public class PlayActivity extends AppCompatActivity {
 
         getIntent = getIntent();
         hakSayisi = getIntent.getIntExtra("heartCount", 0);
+        binding.textViewPlayActivityUserHeartCount.setText("+" + hakSayisi);
 
         for (Map.Entry soru: SplashScreenActivity.sorularList.entrySet()){
             sorularListesi.add(String.valueOf(soru.getValue()));
             sorularKodList.add(String.valueOf(soru.getKey()));
         }
 
-       randomSoruGetir();
+        randomSoruGetir();
+        loadBanner();
+    }
+
+    private void loadBanner(){
+        adView = new AdView(this);
+        adView.setAdUnitId(TEST_AD_UNIT_ID_BANNER);
+        adView.setAdSize(getAdSize());
+
+        binding.adViewPlayActivityBanner.removeAllViews();
+        binding.adViewPlayActivityBanner.addView(adView);
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
+    }
+
+    private AdSize getAdSize(){
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        int adWidthPixels = displayMetrics.widthPixels;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+            WindowMetrics windowMetrics = getWindowManager().getCurrentWindowMetrics();
+            adWidthPixels = windowMetrics.getBounds().width();
+        }
+
+        float density = displayMetrics.density;
+
+        int adWidth = (int) (adWidthPixels / density);
+
+        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth);
     }
 
     @Override
@@ -96,6 +144,7 @@ public class PlayActivity extends AppCompatActivity {
             statement.bindString(1, String.valueOf(hsayisi));
             statement.bindString(2, String.valueOf(sonHSayisi));
             statement.execute();
+            binding.textViewPlayActivityUserHeartCount.setText("+" + hsayisi);
         }catch (Exception e){
             e.printStackTrace();
         }

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/customBgColor"
+        android:orientation="vertical"
+        android:padding="7dp">
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/customBgCloseColor">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="İsmini Değiştir"
+                android:textStyle="bold"
+                android:textSize="25sp"
+                android:textColor="@color/customTextColor"
+                android:layout_alignParentLeft="true"
+                android:gravity="center"
+                android:layout_centerVertical="true"
+                android:layout_toLeftOf="@id/imageViewCustomDialogChangeNameClose"/>
+
+            <ImageView
+                android:id="@+id/imageViewCustomDialogChangeNameClose"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_close"
+                android:layout_alignParentRight="true"/>
+
+        </RelativeLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+     >
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextCustomDialogChangeName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Yeni Değeri Giriniz"
+                android:textColor="@color/customTextColor"
+                android:textColorHint="@color/customTextColor"
+                android:layout_marginTop="15dp"
+                android:textAlignment="center"
+                android:textSize="17sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/buttonCustomDialogChangeName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="İsmini Değiştir"
+            android:textColor="@color/customBtnTextColor"
+            android:textAllCaps="false"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:background="@drawable/btn_round_bg_2"
+            app:backgroundTint="@null" />
+
+    </LinearLayout>
+</layout>

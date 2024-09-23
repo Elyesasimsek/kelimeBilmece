@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/customBgColor"
+        android:orientation="vertical"
+        android:padding="7dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/customBgCloseColor">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ayarlar"
+                android:textStyle="bold"
+                android:textSize="25sp"
+                android:textColor="@color/customTextColor"
+                android:layout_alignParentLeft="true"
+                android:gravity="center"
+                android:layout_centerVertical="true"
+                android:layout_toLeftOf="@id/imageViewCustomDialogSettingsClose"/>
+
+            <ImageView
+                android:id="@+id/imageViewCustomDialogSettingsClose"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_close"
+                android:layout_alignParentRight="true"/>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:layout_marginTop="15dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Müzik Aç - Kapa:"
+                android:layout_gravity="center"
+                android:textColor="@color/customTextColor"
+                android:textStyle="bold"
+                android:textSize="17sp"
+                />
+            <RadioGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/radioButtonCustomDialogSettingsMusicClose"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kapat"
+                    android:textColor="@color/customTextColor"
+                    android:textStyle="bold"
+                    android:textSize="15sp"/>
+                 <RadioButton
+                     android:id="@+id/radioButtonCustomDialogSettingsMusicOpen"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:text="Aç"
+                     android:layout_marginLeft="15dp"
+                     android:textColor="@color/customTextColor"
+                     android:textStyle="bold"
+                     android:textSize="15sp"/>
+
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="15dp">
+
+            <Button
+                android:id="@+id/buttonCustomDialogChangeName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="İsmini Değiştir"
+                android:textAllCaps="false"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/customBtnTextColor"
+                android:background="@drawable/btn_round_bg_2"
+                app:backgroundTint="@null" />
+
+            <Button
+                android:id="@+id/buttonCustomDialogChangeProfileImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:textStyle="bold"
+                android:textSize="17sp"
+                android:text="Resmini Değiştir"
+                android:textAllCaps="false"
+                android:textColor="@color/customBtnTextColor"
+                android:background="@drawable/btn_round_bg_2"
+                app:backgroundTint="@null" />
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+</layout>

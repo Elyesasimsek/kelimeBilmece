@@ -1,9 +1,11 @@
 package com.elyesasimsek.kelimebilmece;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.widget.Toast;
@@ -43,7 +45,10 @@ public class SplashScreenActivity extends AppCompatActivity {
     private SQLiteStatement statement;
     private String sqlSorgusu;
     static public HashMap<String, String> sorularList;
+    private MediaPlayer gameTheme;
+    private SharedPreferences preferences;
 
+    private boolean muzikDurumu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,13 +61,18 @@ public class SplashScreenActivity extends AppCompatActivity {
             return insets;
         });
         sorularList = new HashMap<>();
+        gameTheme = MediaPlayer.create(this, R.raw.gametheme);
+        gameTheme.setLooping(true);
+
+        preferences = this.getSharedPreferences("com.elyesasimsek.kelimebilmece", MODE_PRIVATE);
+        muzikDurumu = preferences.getBoolean("muzikDurumu", true);
 
         try {
             db = this.openOrCreateDatabase("KelimeBulmaca", MODE_PRIVATE, null);
             db.execSQL("CREATE TABLE IF NOT EXISTS Ayarlar (kAdi VARCHAR, kHeart VARCHAR, kImage BLOB)");
             cursor = db.rawQuery("SELECT * FROM Ayarlar", null);
             if (cursor.getCount() < 1) {
-                db.execSQL("INSERT INTO Ayarlar (kHeart) VALUES ('0')");
+                db.execSQL("INSERT INTO Ayarlar (kAdi, kHeart) VALUES ('Oyuncu', '0')");
             }
 
             db.execSQL("CREATE TABLE IF NOT EXISTS Sorular (id INTEGER PRIMARY KEY, sKod VARCHAR UNIQUE, soru VARCHAR)");
@@ -100,12 +110,19 @@ public class SplashScreenActivity extends AppCompatActivity {
                 @Override
                 public void onFinish() {
                     Intent intent = new Intent(SplashScreenActivity.this, MainActivity.class);
-                    finish();
                     startActivity(intent);
                 }
             }.start();
         }catch (Exception e){
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (muzikDurumu){
+            gameTheme.start();
         }
     }
 
