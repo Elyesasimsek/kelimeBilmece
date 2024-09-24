@@ -17,6 +17,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
+import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.nfc.Tag;
@@ -41,6 +42,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -50,10 +52,27 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.billingclient.api.AcknowledgePurchaseParams;
+import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchasesUpdatedListener;
+import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.SkuDetails;
+import com.android.billingclient.api.SkuDetailsParams;
+import com.android.billingclient.api.SkuDetailsResponseListener;
 import com.elyesasimsek.kelimebilmece.databinding.ActivityMainBinding;
 import com.elyesasimsek.kelimebilmece.databinding.CustomDialogChangeNameBinding;
+import com.elyesasimsek.kelimebilmece.databinding.CustomDialogGetHeartBinding;
 import com.elyesasimsek.kelimebilmece.databinding.CustomDialogSettingsBinding;
+import com.elyesasimsek.kelimebilmece.databinding.CustomDialogShopBinding;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -66,11 +85,15 @@ import com.google.android.gms.ads.OnUserEarnedRewardListener;
 import com.google.android.gms.ads.rewarded.RewardItem;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
+import com.google.common.collect.ImmutableList;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -114,6 +137,16 @@ public class MainActivity extends AppCompatActivity {
     private boolean muzikDurumu;
     private MediaPlayer mediaPlayer;
 
+    private Dialog getHeartDialog;
+
+    private Dialog shopDialog;
+    private ShopAdapter shopAdapter;
+
+    private BillingClient billingClient;
+    private ArrayList<String> skulList;
+    private ArrayList<Integer> heartList;
+    private int heartPos;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,8 +158,17 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        loadRewardedAd();
         mediaPlayer = MediaPlayer.create(this, R.raw.gametheme);
+        mediaPlayer.setLooping(true);
+
+        preferences = getSharedPreferences("com.elyesasimsek.kelimebilmece", MODE_PRIVATE);
+        muzikDurumu = preferences.getBoolean("muzikDurumu", true); // Varsayılan olarak true
+
+        if (muzikDurumu){
+            mediaPlayer.start();
+        }
+
+        loadRewardedAd();
 
         new Thread(
                 () -> {
@@ -135,8 +177,35 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .start();
 
-        preferences = this.getSharedPreferences("com.elyesasimsek.kelimebilmece", MODE_PRIVATE);
-        muzikDurumu = preferences.getBoolean("muzikDurumu", true);
+        skulList = new ArrayList<>();
+        heartList = new ArrayList<>();
+
+        skulList.add("buy_heart1");
+        skulList.add("buy_heart2");
+        skulList.add("buy_heart3");
+        skulList.add("buy_heart4");
+        skulList.add("buy_heart5");
+
+        heartList.add(3);
+        heartList.add(15);
+        heartList.add(50);
+        heartList.add(90);
+        heartList.add(500);
+
+        billingClient = BillingClient.newBuilder(getApplicationContext()).setListener(purchasesUpdatedListener).build();
+        billingClient.startConnection(new BillingClientStateListener() {
+            @Override
+            public void onBillingServiceDisconnected() {
+                Toast.makeText(getApplicationContext(), "Ödeme sistemi şu anda geçerli değil.", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK){
+                    Toast.makeText(getApplicationContext(), "Ödeme sistemi için google play hesabınızı kontrol ediniz.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         try {
             db = this.openOrCreateDatabase("KelimeBulmaca", MODE_PRIVATE, null);
@@ -154,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             heartCount = Integer.valueOf(cursor.getString(heartIndex));
-            binding.textViewMainActivityUserHeartCount.setText("+" + heartIndex);
+            binding.textViewMainActivityUserHeartCount.setText("+" + heartCount);
             binding.textViewMainActivityUserName.setText(cursor.getString(nameIndex));
 
             cursor.close();
@@ -185,6 +254,154 @@ public class MainActivity extends AppCompatActivity {
 
     public void btnAyarlar(View view){
         ayarlariGoster();
+    }
+
+    private void  marketDiyalog(){
+        CustomDialogShopBinding shopBinding;
+        shopBinding = DataBindingUtil.inflate(LayoutInflater.from(MainActivity.this), R.layout.custom_dialog_shop, null, false);
+
+        shopDialog = new Dialog(this);
+        params = new WindowManager.LayoutParams();
+        params.copyFrom(shopDialog.getWindow().getAttributes());
+        params.width = WindowManager.LayoutParams.MATCH_PARENT;
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        shopDialog.setCancelable(false);
+        shopDialog.setContentView(shopBinding.getRoot());
+
+        shopBinding.imageViewCustomDialogShopClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                shopDialog.dismiss();
+            }
+        });
+
+        shopAdapter = new ShopAdapter(this, Shop.getData());
+
+        shopBinding.rvCustomDialogShop.setHasFixedSize(true);
+        shopBinding.rvCustomDialogShop.setLayoutManager(new GridLayoutManager(this, 3));
+        shopBinding.rvCustomDialogShop.addItemDecoration(new GridItemDecoration(3, 5));
+        shopBinding.rvCustomDialogShop.setAdapter(shopAdapter);
+
+        shopAdapter.setOnItemClickListener(new ShopAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(Shop mShop, int pos) {
+
+                if (billingClient.isReady()) {
+                    List<QueryProductDetailsParams.Product> productList= ImmutableList.of(
+                            QueryProductDetailsParams.Product.newBuilder()
+                                    .setProductId(skulList.get(pos)) // Ürün ID'sini buradan alın
+                                    .setProductType(BillingClient.ProductType.INAPP)
+                                    .build()
+                    );
+
+                    QueryProductDetailsParams queryProductDetailsParams = QueryProductDetailsParams.newBuilder()
+                            .setProductList(productList)
+                            .build();
+
+                    billingClient.queryProductDetailsAsync(queryProductDetailsParams, (billingResult, productDetailsList) -> {
+                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && !productDetailsList.isEmpty()) {
+                            ProductDetails productDetails = productDetailsList.get(0);
+                            BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
+                                    .setProductDetailsParamsList(ImmutableList.of(
+                                            BillingFlowParams.ProductDetailsParams.newBuilder()
+                                                    .setProductDetails(productDetails)
+                                                    .build()
+                                    ))
+                                    .build();
+
+                            int responseCode = billingClient.launchBillingFlow(MainActivity.this, billingFlowParams).getResponseCode();
+                            if (responseCode == BillingClient.BillingResponseCode.OK) {
+                                heartPos = pos;
+                            } else {
+                                // Hata durumunu işleyin
+                            }
+                        } else {
+                            // Hata durumunu işleyin
+                        }
+                    });
+                }
+
+
+                /*    if (billingClient.isReady()){
+                    SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
+                    params.setSkusList(Collections.singletonList(skulList.get(pos))).setType(BillingClient.SkuType.INAPP);
+                    billingClient.querySkuDetailsAsync(params.build(), new SkuDetailsResponseListener() {
+                        @Override
+                        public void onSkuDetailsResponse(@NonNull BillingResult billingResult, @Nullable List<SkuDetails> list) {
+                            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null){
+                                BillingFlowParams flowParams = BillingFlowParams.newBuilder().setSkuDetails(list.get(0)).build();
+                                billingClient.launchBillingFlow(MainActivity.this, flowParams);
+
+                                heartPos = pos;
+                            }
+                        }
+                    });
+                }*/
+            }
+        });
+
+        shopDialog.getWindow().setAttributes(params);
+        shopDialog.show();
+    }
+
+    private class GridItemDecoration extends RecyclerView.ItemDecoration{
+        private int spanCount;
+        private int spacing;
+
+        public GridItemDecoration(int spanCount, int spacing) {
+            this.spanCount = spanCount;
+            this.spacing = spacing;
+        }
+
+        @Override
+        public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+            super.getItemOffsets(outRect, view, parent, state);
+            int position = parent.getChildAdapterPosition(view);
+            int column = position % spanCount;
+
+            outRect.left = (column + 1) * spacing + spanCount;
+            outRect.right = (column + 1) * spacing + spanCount;
+            outRect.bottom = spacing;
+        }
+    }
+
+    private void canKazanmaMenusu(){
+        CustomDialogGetHeartBinding heartBinding;
+        heartBinding = DataBindingUtil.inflate(LayoutInflater.from(MainActivity.this), R.layout.custom_dialog_get_heart, null, false);
+
+        getHeartDialog = new Dialog(this);
+        params = new WindowManager.LayoutParams();
+        params.copyFrom(getHeartDialog.getWindow().getAttributes());
+        params.width = WindowManager.LayoutParams.MATCH_PARENT;
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        getHeartDialog.setCancelable(false);
+        getHeartDialog.setContentView(heartBinding.getRoot());
+
+        heartBinding.imageViewCustomDialoggetHeartClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getHeartDialog.dismiss();
+            }
+        });
+
+        heartBinding.imageViewcustomDialoggetHeartShowAndGet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showRewardAd();
+                getHeartDialog.dismiss();
+            }
+        });
+
+        heartBinding.imageViewcustomDialoggetHeartBuyAndGet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Shop Menu
+                marketDiyalog();
+            }
+        });
+
+        getHeartDialog.getWindow().setAttributes(params);
+        getHeartDialog.show();
     }
 
     private void ayarlariGoster(){
@@ -289,11 +506,19 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean("muzikDurumu", b);
         editor.apply();
 
-        if (b) {
-            // Müzik aç
-            mediaPlayer.start();
-        } else {// Müzik kapat
-            mediaPlayer.pause(); // veya mediaPlayer.stop();
+        muzikDurumu = preferences.getBoolean("muzikDurumu", true); // Güncel değeri oku
+
+
+        if (mediaPlayer != null) {
+            if (b) {
+                if (!mediaPlayer.isPlaying()) {
+                    mediaPlayer.start();
+                }
+            } else {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                }
+            }
         }
 
         Toast.makeText(getApplicationContext(), "Ayar Başarıyla Kayıt Edildi", Toast.LENGTH_SHORT).show();
@@ -406,12 +631,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void btnHakKazan(View view) {
-        showRewardAd();
+        canKazanmaMenusu();
     }
 
     private void loadBanner(){
         adView = new AdView(this);
-        adView.setAdUnitId(TEST_AD_UNIT_ID_BANNER);
+        adView.setAdUnitId(AD_UNIT_ID_BANNER);
         adView.setAdSize(getAdSize());
 
         binding.adViewMainActivityBanner.removeAllViews();
@@ -446,19 +671,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void mainBtnMarketClick(View view){
-
+        marketDiyalog();
     }
 
     public void mainBtnCikisClick(View view){
-
+        uygulamadanCik();
     }
 
     @Override
     public void onBackPressed() {
         //alertDialog
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("Kelime Bilmece");
+        alert.setIcon(R.mipmap.ic_kelimebilmece);
+        alert.setMessage("Uygulamadan Çıkmak İstediiğinize Emin misiniz?");
+        alert.setPositiveButton("Hayır", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        alert.setNegativeButton("Evet", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                uygulamadanCik();
+            }
+        });
+        alert.show();
         super.onBackPressed();
     }
 
+    private void uygulamadanCik(){
+        moveTaskToBack(true);
+        android.os.Process.killProcess(android.os.Process.myPid());
+        System.exit(0);
+    }
 
     private void loadRewardedAd(){
         AdRequest adRequest = new AdRequest.Builder().build();
@@ -524,7 +771,7 @@ public class MainActivity extends AppCompatActivity {
                     imageViewHeart.setVisibility(View.VISIBLE);
 
                     imgHeartXPos = (binding.imageViewMainActivityHeartDesign.getX() + ((float) binding.imageViewMainActivityHeartDesign.getWidth() / 2.5f));
-                    imgHeartYPos = (binding.imageViewMainActivityHeartDesign.getY() + ((float) binding.imageViewMainActivityHeartDesign.getHeight() / 2f) + 20);
+                    imgHeartYPos = (binding.imageViewMainActivityHeartDesign.getY() + ((float) binding.imageViewMainActivityHeartDesign.getHeight() / 2f) + 70);
 
                     objectAnimatorHeartX = ObjectAnimator.ofFloat(imageViewHeart, "x", imgHeartXPos);
                     objectAnimatorHeartX.setDuration(imgHeartDuration);
@@ -660,5 +907,41 @@ public class MainActivity extends AppCompatActivity {
         Bitmap bitmap = BitmapFactory.decodeStream(inputStream, null, options);
         inputStream.close();
         return bitmap;
+    }
+
+    private PurchasesUpdatedListener purchasesUpdatedListener = new PurchasesUpdatedListener() {
+        @Override
+        public void onPurchasesUpdated(@NonNull BillingResult billingResult, @Nullable List<Purchase> list) {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null){
+                for (Purchase purchase: list){
+                    if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED){
+                        handlePurchase(purchase);
+                    }
+                }
+            } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
+                // Kullanıcı satın alma işlemini iptal etti
+            }else {
+                // Diğer hata durumlarını işleyin
+            }
+        }
+    };
+
+    private void handlePurchase(Purchase purchase) {
+        if (!purchase.isAcknowledged()) {
+            AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+                    .setPurchaseToken(purchase.getPurchaseToken())
+                    .build();
+
+            billingClient.acknowledgePurchase(acknowledgePurchaseParams, billingResult -> {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    Toast.makeText(getApplicationContext(), "Satın Alma İşlemi Başarılı.", Toast.LENGTH_SHORT).show();
+
+                    sonCanDurumu += heartList.get(heartPos);
+                    canMiktariniGuncelle(Integer.parseInt(binding.textViewMainActivityUserHeartCount.getText().toString()), sonCanDurumu);
+                } else {
+                    // Onaylama hatasını işleyin
+                }
+            });
+        }
     }
 }

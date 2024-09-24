@@ -47,6 +47,7 @@ public class SplashScreenActivity extends AppCompatActivity {
     static public HashMap<String, String> sorularList;
     private MediaPlayer gameTheme;
     private SharedPreferences preferences;
+    private SharedPreferences.Editor editor;
 
     private boolean muzikDurumu;
 
@@ -61,11 +62,6 @@ public class SplashScreenActivity extends AppCompatActivity {
             return insets;
         });
         sorularList = new HashMap<>();
-        gameTheme = MediaPlayer.create(this, R.raw.gametheme);
-        gameTheme.setLooping(true);
-
-        preferences = this.getSharedPreferences("com.elyesasimsek.kelimebilmece", MODE_PRIVATE);
-        muzikDurumu = preferences.getBoolean("muzikDurumu", true);
 
         try {
             db = this.openOrCreateDatabase("KelimeBulmaca", MODE_PRIVATE, null);
@@ -115,14 +111,6 @@ public class SplashScreenActivity extends AppCompatActivity {
             }.start();
         }catch (Exception e){
             e.printStackTrace();
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (muzikDurumu){
-            gameTheme.start();
         }
     }
 

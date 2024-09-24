@@ -1,5 +1,7 @@
 package com.elyesasimsek.kelimebilmece;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -9,11 +11,14 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.WindowMetrics;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -21,6 +26,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.databinding.DataBindingUtil;
 
 import com.elyesasimsek.kelimebilmece.databinding.ActivityPlayBinding;
+import com.elyesasimsek.kelimebilmece.databinding.CustomDialogStatisticTableBinding;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
@@ -31,6 +37,8 @@ import java.util.Map;
 import java.util.Random;
 
 public class PlayActivity extends AppCompatActivity {
+
+    private AlertDialog.Builder alert;
 
     private ActivityPlayBinding binding;
     private SQLiteDatabase db;
@@ -53,6 +61,11 @@ public class PlayActivity extends AppCompatActivity {
     private AdView adView;
     private static String AD_UNIT_ID_BANNER = "ca-app-pub-4632976048436433/1647001111";
     private static String TEST_AD_UNIT_ID_BANNER = "ca-app-pub-3940256099942544/9214589741";
+
+    private Dialog statisticTableDialog;
+    WindowManager.LayoutParams params;
+    private int cozulenKelimeSayisi = 0, cozulenSoruSayisi = 0, yapilanYanlisSayisi = 0, maksimumSoruSayisi, maksimumKelimeSayisi;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +105,86 @@ public class PlayActivity extends AppCompatActivity {
         loadBanner();
     }
 
+    public void btnIstatistikTablosu(View view){
+        maksimumVerileriHesapla("");
+    }
+
+    private void istatistikTablosunuGoster(String oyunDurumu, int maksimumSoruSayisi, int maksimumKelimeSayisi, int cozulenSoruSayisi, int cozulenKelimeSayisi, int yapilanYanlisSayisi){
+        CustomDialogStatisticTableBinding statisticTableBinding;
+        statisticTableBinding = DataBindingUtil.inflate(LayoutInflater.from(PlayActivity.this), R.layout.custom_dialog_statistic_table, null, false);
+
+        statisticTableDialog = new Dialog(PlayActivity.this);
+        params = new WindowManager.LayoutParams();
+        params.copyFrom(statisticTableDialog.getWindow().getAttributes());
+        params.width = WindowManager.LayoutParams.MATCH_PARENT;
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        statisticTableDialog.setContentView(statisticTableBinding.getRoot());
+
+        if (oyunDurumu.matches("oyunBitti")){
+            yapilanYanlisSayisi++;
+            statisticTableDialog.setCancelable(false);
+            statisticTableBinding.linearLayoutCustomDialogStatisticTable.setVisibility(View.VISIBLE);
+            statisticTableBinding.imageViewCustomDialogStatisticTableClose.setVisibility(View.GONE);
+        }
+
+        statisticTableBinding.textViewCustomDialogStatisticTableQuestionCount.setText(cozulenSoruSayisi + " / " + maksimumSoruSayisi);
+        statisticTableBinding.textViewCustomDialogStatisticTableWordCount.setText(cozulenKelimeSayisi + " / " + maksimumKelimeSayisi);
+        statisticTableBinding.textViewCustomDialogStatisticTableFalseGuessCount.setText(yapilanYanlisSayisi + " / " + (cozulenKelimeSayisi + yapilanYanlisSayisi));
+
+        statisticTableBinding.progressBarCustomDialogStatisticTableQuestionCount.setProgress(cozulenSoruSayisi);
+        statisticTableBinding.progressBarCustomDialogStatisticTableQuestionCount.setMax(maksimumSoruSayisi);
+        statisticTableBinding.progressBarCustomDialogStatisticTableWordCount.setProgress(cozulenKelimeSayisi);
+        statisticTableBinding.progressBarCustomDialogStatisticTableWordCount.setMax(maksimumKelimeSayisi);
+        statisticTableBinding.progressBarCustomDialogStatisticTableFalseGuessCount.setProgress(yapilanYanlisSayisi);
+        statisticTableBinding.progressBarCustomDialogStatisticTableFalseGuessCount.setMax((cozulenKelimeSayisi + yapilanYanlisSayisi));
+
+        statisticTableBinding.imageViewCustomDialogStatisticTableClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                statisticTableDialog.dismiss();
+            }
+        });
+
+        statisticTableBinding.buttonCustomDialogStatisticTableMainMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mainIntent();
+            }
+        });
+
+        statisticTableBinding.buttonCustomDialogStatisticTablePlayAgain.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent thisIntent = new Intent(PlayActivity.this, PlayActivity.class);
+                thisIntent.putExtra("heartCount", Integer.valueOf(binding.textViewPlayActivityUserHeartCount.getText().toString()));
+                finish();
+                startActivity(thisIntent);
+            }
+        });
+
+        statisticTableDialog.getWindow().setAttributes(params);
+        statisticTableDialog.show();
+    }
+
+    private void maksimumVerileriHesapla(String oyunDurumu){
+        maksimumKelimeSayisi = 0;
+        maksimumSoruSayisi = 0;
+
+        try {
+            cursor = db.rawQuery("SELECT * FROM Kelimeler, Sorular WHERE Kelimeler.kKod = Sorular.sKod", null);
+            maksimumKelimeSayisi = cursor.getCount();
+
+            cursor = db.rawQuery("SELECT * FROM Sorular", null);
+            maksimumSoruSayisi = cursor.getCount();
+
+            cursor.close();
+
+            istatistikTablosunuGoster(oyunDurumu, maksimumSoruSayisi, maksimumKelimeSayisi, cozulenSoruSayisi, cozulenKelimeSayisi, yapilanYanlisSayisi);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     private void loadBanner(){
         adView = new AdView(this);
         adView.setAdUnitId(TEST_AD_UNIT_ID_BANNER);
@@ -122,7 +215,23 @@ public class PlayActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        mainIntent();
+        alert = new AlertDialog.Builder(this);
+        alert.setTitle("Kelime Bilmece");
+        alert.setMessage("Geri Dönmek İstediğinize Emin Misiniz?");
+        alert.setIcon(R.mipmap.ic_kelimebilmece);
+        alert.setPositiveButton("Hayır", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        alert.setNegativeButton("Evet", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mainIntent();
+            }
+        });
+        alert.show();
         super.onBackPressed();
     }
 
@@ -157,14 +266,16 @@ public class PlayActivity extends AppCompatActivity {
             if (textTahminDegeri.matches(rastgeleKelime)){
                 Toast.makeText(getApplicationContext(), "Doğru Tahmin.", Toast.LENGTH_SHORT).show();
                 binding.editTextPlayActivityGuess.setText("");
+                cozulenKelimeSayisi++;
 
                 if (kelimelerLisetesi.size() > 0){
                     randomKelimeGetir();
                 }else {
                     if (sorularListesi.size() > 0){
                         randomSoruGetir();
+                        cozulenSoruSayisi++;
                     }else {
-                        Toast.makeText(getApplicationContext(), "Sorular Bitti.", Toast.LENGTH_SHORT).show();
+                        maksimumVerileriHesapla("oyunBitti");
                     }
 
                 }
@@ -172,22 +283,12 @@ public class PlayActivity extends AppCompatActivity {
                 if (hakSayisi > 0){
                     sonHakSayisi = sonHakSayisi;
                     hakSayisi--;
-                    Toast.makeText(getApplicationContext(), "Yanliş Tahminde Bulundunuz, Kalp Sayınız Bir Azaldı.", Toast.LENGTH_SHORT).show();
+                    yapilanYanlisSayisi++;
+                    kalanHakkiKaydet(hakSayisi, sonHakSayisi);
+                    Toast.makeText(getApplicationContext(), "Yanliş Tahminde Bulundunuz, Can Sayınız Bir Azaldı.", Toast.LENGTH_SHORT).show();
                 }else {
-                    Toast.makeText(getApplicationContext(), "Devam Edebilmek İçin Kalp Sayısı Yetersiz. Oyun Bitti", Toast.LENGTH_LONG).show();
-
-                    new CountDownTimer(1100, 1000){
-
-                        @Override
-                        public void onTick(long millisUntilFinished) {
-
-                        }
-
-                        @Override
-                        public void onFinish() {
-                            mainIntent();
-                        }
-                    }.start();
+                    maksimumVerileriHesapla("oyunBitti");
+                    Toast.makeText(PlayActivity.this, "Oyun Bitti.", Toast.LENGTH_SHORT).show();
                 }
             }
         }else {

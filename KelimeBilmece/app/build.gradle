@@ -43,4 +43,7 @@ dependencies {
 
     implementation libs.circleimageview
     implementation libs.play.services.ads
+
+    implementation libs.billing
+    implementation libs.guava
 }
