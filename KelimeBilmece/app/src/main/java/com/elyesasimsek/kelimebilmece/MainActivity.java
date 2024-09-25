@@ -54,6 +54,9 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.Data;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
@@ -94,6 +97,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -192,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         heartList.add(90);
         heartList.add(500);
 
-        billingClient = BillingClient.newBuilder(getApplicationContext()).setListener(purchasesUpdatedListener).build();
+        billingClient = BillingClient.newBuilder(getApplicationContext()).setListener(purchasesUpdatedListener).enablePendingPurchases().build();
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingServiceDisconnected() {
@@ -322,21 +326,6 @@ public class MainActivity extends AppCompatActivity {
                 }
 
 
-                /*    if (billingClient.isReady()){
-                    SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
-                    params.setSkusList(Collections.singletonList(skulList.get(pos))).setType(BillingClient.SkuType.INAPP);
-                    billingClient.querySkuDetailsAsync(params.build(), new SkuDetailsResponseListener() {
-                        @Override
-                        public void onSkuDetailsResponse(@NonNull BillingResult billingResult, @Nullable List<SkuDetails> list) {
-                            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null){
-                                BillingFlowParams flowParams = BillingFlowParams.newBuilder().setSkuDetails(list.get(0)).build();
-                                billingClient.launchBillingFlow(MainActivity.this, flowParams);
-
-                                heartPos = pos;
-                            }
-                        }
-                    });
-                }*/
             }
         });
 
@@ -698,7 +687,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         alert.show();
-        super.onBackPressed();
     }
 
     private void uygulamadanCik(){
@@ -909,6 +897,8 @@ public class MainActivity extends AppCompatActivity {
         return bitmap;
     }
 
+
+
     private PurchasesUpdatedListener purchasesUpdatedListener = new PurchasesUpdatedListener() {
         @Override
         public void onPurchasesUpdated(@NonNull BillingResult billingResult, @Nullable List<Purchase> list) {
@@ -916,11 +906,15 @@ public class MainActivity extends AppCompatActivity {
                 for (Purchase purchase: list){
                     if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED){
                         handlePurchase(purchase);
+                    } else if (purchase.getPurchaseState() == Purchase.PurchaseState.PENDING) {
+
                     }
                 }
             } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
                 // Kullanıcı satın alma işlemini iptal etti
-            }else {
+            } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE) {
+                Toast.makeText(getApplicationContext(), "BILLING_UNAVAILABLE", Toast.LENGTH_SHORT).show();
+            } else {
                 // Diğer hata durumlarını işleyin
             }
         }
@@ -943,5 +937,31 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+
+    }
+
+    private void handlePendingPurchase(Purchase purchase) {
+        // 1. Kullanıcıya satın alma işleminin bekleyen olduğunu bildirin
+        Toast.makeText(this, "Satın alma işlemi bekleniyor...", Toast.LENGTH_SHORT).show();
+
+        // 2. Satın alma işlemini izlemek için WorkManager kullanın
+        String purchaseToken = purchase.getPurchaseToken();
+        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(PendingPurchaseWorker.class)
+                .setInputData(new Data()
+                        .putString("purchaseToken", purchaseToken)
+                        .build())
+                .setInitialDelay(1, TimeUnit.HOURS) // 1 saatlik gecikme
+                .build();
+        WorkManager.getInstance(this).enqueue(workRequest);
+
+        // 3. Zaman aşımı - 24 saat sonra işlemi iptal et
+        OneTimeWorkRequest cancellationRequest = new OneTimeWorkRequest.Builder(PurchaseCancellationWorker.class)
+                .setInputData(new Data.Builder()
+                        .putString("purchaseToken", purchaseToken)
+                        .build())
+                .setInitialDelay(24, TimeUnit.HOURS) // 24 saatlik gecikme
+                .build();
+        WorkManager.getInstance(this).enqueue(cancellationRequest);
     }
 }
